@@ -1,0 +1,65 @@
+"""Docker Compose for demo vulnerable repo"""
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./api_gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - user-service
+      - order-service
+      - payment-service
+    environment:
+      - LOG_LEVEL=INFO
+
+  auth-service:
+    build: ./auth_service
+    ports:
+      - "8001:8000"
+    environment:
+      - LOG_LEVEL=INFO
+
+  user-service:
+    build: ./user_service
+    ports:
+      - "8002:8000"
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/demo_db
+      - LOG_LEVEL=INFO
+
+  order-service:
+    build: ./order_service
+    ports:
+      - "8003:8000"
+    depends_on:
+      - postgres
+      - payment-service
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/demo_db
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - LOG_LEVEL=INFO
+
+  payment-service:
+    build: ./payment_service
+    ports:
+      - "8004:8000"
+    environment:
+      - LOG_LEVEL=INFO
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: demo_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
