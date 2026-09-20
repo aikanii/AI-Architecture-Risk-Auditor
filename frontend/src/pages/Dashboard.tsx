@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Play,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  ShieldAlert,
+  Layers,
+  Server,
+  Network,
+  Search,
+  Cpu,
+  Lock,
+  Database,
+  Globe,
+  FileCode,
+  Terminal,
+} from 'lucide-react';
 import '../styles/Dashboard.css';
 
 interface DashboardProps {
@@ -9,7 +26,11 @@ interface DashboardProps {
 function Dashboard({ scans }: DashboardProps) {
   const [repositoryUrl, setRepositoryUrl] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [scanMessage, setScanMessage] = useState('');
+  const [scanStatus, setScanStatus] = useState<{
+    type: 'idle' | 'loading' | 'success' | 'error';
+    message: string;
+  }>({ type: 'idle', message: '' });
+
   const [stats, setStats] = useState<{
     criticalCount: number;
     highCount: number;
@@ -49,7 +70,7 @@ function Dashboard({ scans }: DashboardProps) {
 
     try {
       setScanning(true);
-      setScanMessage('⏳ Scanning in progress...');
+      setScanStatus({ type: 'loading', message: 'Scanning in progress...' });
 
       let repositoryConfig: Record<string, string>;
       if (repositoryUrl.startsWith('http://') || repositoryUrl.startsWith('https://')) {
@@ -70,12 +91,12 @@ function Dashboard({ scans }: DashboardProps) {
       }
       
       const data = await response.json();
-      setScanMessage(`✅ Scan initiated: ${data.scan_id}`);
+      setScanStatus({ type: 'success', message: `Scan initiated: ${data.scan_id}` });
       setRepositoryUrl('');
       
       setTimeout(() => window.location.reload(), 1500);
     } catch (err: any) {
-      setScanMessage(`❌ Error: ${err.message}`);
+      setScanStatus({ type: 'error', message: err.message });
     } finally {
       setScanning(false);
     }
@@ -89,8 +110,11 @@ function Dashboard({ scans }: DashboardProps) {
 
       {/* Quick Scan Section */}
       <section className="card scan-section">
-        <h3>Initiate New Scan</h3>
-        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
+        <h3>
+          <Terminal size={18} color="#38bdf8" />
+          Initiate New Scan
+        </h3>
+        <p>
           Scan local directories or git repositories for microservice architectural vulnerabilities, SPOFs, shared datastores, unencrypted traffic, and access control risks.
         </p>
         <form onSubmit={handleInitiateScan}>
@@ -103,28 +127,57 @@ function Dashboard({ scans }: DashboardProps) {
               disabled={scanning}
             />
             <button type="submit" className="btn-primary" disabled={scanning}>
-              {scanning ? 'Scanning...' : '🚀 Start Scan'}
+              {scanning ? (
+                <>
+                  <RefreshCw size={15} className="spin" />
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <Play size={15} />
+                  Start Scan
+                </>
+              )}
             </button>
           </div>
-          {scanMessage && <p className="scan-message">{scanMessage}</p>}
+          {scanStatus.type !== 'idle' && (
+            <div className="scan-message" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {scanStatus.type === 'loading' && <RefreshCw size={15} className="spin" color="#38bdf8" />}
+              {scanStatus.type === 'success' && <CheckCircle2 size={16} color="#34d399" />}
+              {scanStatus.type === 'error' && <AlertCircle size={16} color="#ff3366" />}
+              <span>{scanStatus.message}</span>
+            </div>
+          )}
         </form>
       </section>
 
       {/* Statistics */}
       <div className="stats-grid">
         <div className="stat-card stat-critical">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+            <ShieldAlert size={20} color="#ff3366" />
+          </div>
           <div className="stat-number">{stats.criticalCount}</div>
           <div className="stat-label">Critical Findings</div>
         </div>
         <div className="stat-card stat-high">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+            <Layers size={20} color="#fb923c" />
+          </div>
           <div className="stat-number">{scans.length}</div>
           <div className="stat-label">Total Scans</div>
         </div>
         <div className="stat-card stat-medium">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+            <CheckCircle2 size={20} color="#34d399" />
+          </div>
           <div className="stat-number">{scans.filter((s) => s.status === 'COMPLETED').length}</div>
           <div className="stat-label">Completed Scans</div>
         </div>
         <div className="stat-card stat-info">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+            <Server size={20} color="#38bdf8" />
+          </div>
           <div className="stat-number">{stats.serviceCount}</div>
           <div className="stat-label">Audited Services</div>
         </div>
@@ -132,8 +185,11 @@ function Dashboard({ scans }: DashboardProps) {
 
       {/* Recent Scans */}
       <section className="card recent-scans">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3>Recent Scans</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Layers size={18} color="#38bdf8" />
+            Recent Scans
+          </h3>
           <Link to="/scans" className="btn-small btn-secondary">
             View All Scans
           </Link>
@@ -158,10 +214,12 @@ function Dashboard({ scans }: DashboardProps) {
                   </div>
                   <div className="scan-actions">
                     <Link to={`/scans/${scan.scan_id}`} className="btn-small btn-primary">
-                      🕸️ Graph
+                      <Network size={13} />
+                      Graph
                     </Link>
                     <Link to={`/findings/${scan.scan_id}`} className="btn-small btn-secondary">
-                      🔍 Findings
+                      <Search size={13} />
+                      Findings
                     </Link>
                   </div>
                 </div>
@@ -171,15 +229,30 @@ function Dashboard({ scans }: DashboardProps) {
         )}
       </section>
 
-      {/* Quick Links */}
+      {/* Architecture Features */}
       <section className="card quick-links">
-        <h3>Architecture Analysis Features</h3>
+        <h3>Architecture Analysis Capabilities</h3>
         <ul>
-          <li><span>⚡ Deterministic SPOF & Bottleneck Graph Detection</span></li>
-          <li><span>🔒 Static AST & Semgrep Security Pattern Scanning</span></li>
-          <li><span>📦 Multi-Writer Shared Datastore Detection</span></li>
-          <li><span>🌐 Inter-Service Unencrypted HTTP Traffic Tracing</span></li>
-          <li><span>📊 SARIF, JSON & Interactive Cytoscape Visualizations</span></li>
+          <li>
+            <Cpu size={16} color="#38bdf8" />
+            <span>Deterministic SPOF & Bottleneck Graph Detection</span>
+          </li>
+          <li>
+            <Lock size={16} color="#38bdf8" />
+            <span>Static AST & Semgrep Security Pattern Scanning</span>
+          </li>
+          <li>
+            <Database size={16} color="#38bdf8" />
+            <span>Multi-Writer Shared Datastore Detection</span>
+          </li>
+          <li>
+            <Globe size={16} color="#38bdf8" />
+            <span>Inter-Service Unencrypted HTTP Traffic Tracing</span>
+          </li>
+          <li>
+            <FileCode size={16} color="#38bdf8" />
+            <span>SARIF 2.1.0, JSON & Interactive Cytoscape Visualizations</span>
+          </li>
         </ul>
       </section>
     </div>

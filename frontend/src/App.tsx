@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { ShieldCheck, Activity, Layers, Network, AlertTriangle, ExternalLink } from 'lucide-react';
 import './App.css';
 import Dashboard from './pages/Dashboard';
 import ScanResults from './pages/ScanResults';
@@ -36,13 +37,34 @@ function App() {
       <div className="App">
         <nav className="navbar">
           <div className="navbar-brand">
-            <h1>🛡️ AI ARCHITECTURE AUDITOR</h1>
+            <ShieldCheck size={24} color="#38bdf8" />
+            <h1>AI ARCHITECTURE AUDITOR</h1>
           </div>
           <ul className="nav-links">
-            <li><Link to="/">Dashboard</Link></li>
-            <li><Link to="/scans">Scans</Link></li>
-            <li><Link to="/graph">Architecture Graph</Link></li>
-            <li><Link to="/findings">Findings</Link></li>
+            <li>
+              <Link to="/">
+                <Activity size={15} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <Link to="/scans">
+                <Layers size={15} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                Scans
+              </Link>
+            </li>
+            <li>
+              <Link to="/graph">
+                <Network size={15} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                Architecture Graph
+              </Link>
+            </li>
+            <li>
+              <Link to="/findings">
+                <AlertTriangle size={15} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                Findings
+              </Link>
+            </li>
             <li>
               <a
                 href="/docs"
@@ -51,7 +73,8 @@ function App() {
                 className="btn-primary btn-small"
                 style={{ textDecoration: 'none' }}
               >
-                API Docs ↗
+                API Docs
+                <ExternalLink size={13} style={{ marginLeft: '4px' }} />
               </a>
             </li>
           </ul>
@@ -73,7 +96,9 @@ function App() {
         <footer className="footer">
           <p>
             AI Architecture Risk Auditor v0.1.0 | Microservices Architecture Security & Risk Analysis |{' '}
-            <a href="/docs" target="_blank" rel="noreferrer">OpenAPI Documentation</a>
+            <a href="/docs" target="_blank" rel="noreferrer">
+              OpenAPI Documentation <ExternalLink size={12} style={{ verticalAlign: 'middle' }} />
+            </a>
           </p>
         </footer>
       </div>

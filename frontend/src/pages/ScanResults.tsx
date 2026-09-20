@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Plus, RefreshCw, Network, Search, Trash2 } from 'lucide-react';
 import '../styles/ScanResults.css';
 
 interface ScanItem {
@@ -22,6 +23,7 @@ interface ScanResultsProps {
 function ScanResults({ scans, onRefresh }: ScanResultsProps) {
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [sortBy, setSortBy] = useState('date-desc');
+  const [refreshing, setRefreshing] = useState(false);
 
   const filteredScans = selectedStatus === 'ALL' 
     ? scans 
@@ -35,6 +37,12 @@ function ScanResults({ scans, onRefresh }: ScanResultsProps) {
     }
     return 0;
   });
+
+  const handleRefreshClick = () => {
+    setRefreshing(true);
+    onRefresh();
+    setTimeout(() => setRefreshing(false), 600);
+  };
 
   const handleDeleteScan = async (scanId: string) => {
     if (window.confirm(`Delete scan ${scanId}?`)) {
@@ -64,7 +72,8 @@ function ScanResults({ scans, onRefresh }: ScanResultsProps) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2>Scan History</h2>
         <Link to="/" className="btn-primary">
-          + New Scan
+          <Plus size={15} />
+          New Scan
         </Link>
       </div>
 
@@ -89,8 +98,9 @@ function ScanResults({ scans, onRefresh }: ScanResultsProps) {
           </select>
         </div>
 
-        <button className="btn-secondary" onClick={onRefresh}>
-          🔄 Refresh
+        <button className="btn-secondary" onClick={handleRefreshClick}>
+          <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
+          Refresh
         </button>
       </div>
 
@@ -132,15 +142,19 @@ function ScanResults({ scans, onRefresh }: ScanResultsProps) {
                   </td>
                   <td className="actions">
                     <Link to={`/scans/${scan.scan_id}`} className="btn-small btn-primary">
-                      🕸️ Graph
+                      <Network size={13} />
+                      Graph
                     </Link>
                     <Link to={`/findings/${scan.scan_id}`} className="btn-small btn-secondary">
-                      🔍 Findings
+                      <Search size={13} />
+                      Findings
                     </Link>
                     <button 
                       className="btn-small btn-danger"
                       onClick={() => handleDeleteScan(scan.scan_id)}
+                      title="Delete Scan"
                     >
+                      <Trash2 size={13} />
                       Delete
                     </button>
                   </td>

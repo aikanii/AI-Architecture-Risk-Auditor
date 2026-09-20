@@ -1,6 +1,20 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import cytoscape, { Core } from 'cytoscape';
+import {
+  Network,
+  ShieldAlert,
+  LayoutGrid,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Camera,
+  Server,
+  GitBranch,
+  Database,
+  X,
+  Layers,
+} from 'lucide-react';
 import '../styles/GraphView.css';
 
 interface NodeData {
@@ -318,7 +332,7 @@ function GraphView() {
 
   const handleExportPNG = () => {
     if (cyRef.current) {
-      const png64 = cyRef.current.png({ full: true, bg: '#ffffff', scale: 2 });
+      const png64 = cyRef.current.png({ full: true, bg: '#07090e', scale: 2 });
       const a = document.createElement('a');
       a.href = png64;
       a.download = `architecture_graph_${activeScanId?.substring(0, 8)}.png`;
@@ -345,17 +359,28 @@ function GraphView() {
 
   return (
     <div className="graph-view">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h2>Architecture Graph - {activeScanId?.substring(0, 8)}</h2>
-        <div>
-          <Link to={`/findings/${activeScanId}`} className="btn-secondary" style={{ marginRight: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <Link to={`/findings/${activeScanId}`} className="btn-secondary">
+            <ShieldAlert size={14} />
             View Findings
           </Link>
           <button
             className="btn-primary"
             onClick={() => setViewMode(viewMode === 'cytoscape' ? 'list' : 'cytoscape')}
           >
-            {viewMode === 'cytoscape' ? '📋 Switch to Grid View' : '🕸️ Switch to Graph View'}
+            {viewMode === 'cytoscape' ? (
+              <>
+                <LayoutGrid size={14} />
+                Switch to Grid View
+              </>
+            ) : (
+              <>
+                <Network size={14} />
+                Switch to Graph View
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -364,18 +389,30 @@ function GraphView() {
       {stats && (
         <div className="stats-grid">
           <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <Server size={18} color="#34d399" />
+            </div>
             <div className="stat-number">{stats.service_count || 0}</div>
             <div className="stat-label">Services</div>
           </div>
           <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <GitBranch size={18} color="#38bdf8" />
+            </div>
             <div className="stat-number">{stats.endpoint_count || 0}</div>
             <div className="stat-label">Endpoints</div>
           </div>
           <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <Database size={18} color="#fbbf24" />
+            </div>
             <div className="stat-number">{stats.datastore_count || 0}</div>
             <div className="stat-label">Datastores</div>
           </div>
           <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <Network size={18} color="#818cf8" />
+            </div>
             <div className="stat-number">{edges.length}</div>
             <div className="stat-label">Relationships</div>
           </div>
@@ -388,15 +425,15 @@ function GraphView() {
           <div className="graph-legend">
             <h4>Legend:</h4>
             <div className="legend-item">
-              <div className="legend-box" style={{ backgroundColor: getNodeColor('Service') }}></div>
+              <div className="legend-box" style={{ backgroundColor: getNodeColor('Service'), color: getNodeColor('Service') }}></div>
               <span>Service</span>
             </div>
             <div className="legend-item">
-              <div className="legend-box" style={{ backgroundColor: getNodeColor('Endpoint') }}></div>
+              <div className="legend-box" style={{ backgroundColor: getNodeColor('Endpoint'), color: getNodeColor('Endpoint') }}></div>
               <span>Endpoint</span>
             </div>
             <div className="legend-item">
-              <div className="legend-box" style={{ backgroundColor: getNodeColor('DataStore') }}></div>
+              <div className="legend-box" style={{ backgroundColor: getNodeColor('DataStore'), color: getNodeColor('DataStore') }}></div>
               <span>Data Store</span>
             </div>
           </div>
@@ -405,7 +442,7 @@ function GraphView() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem' }}
+              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
             >
               <option value="ALL">All Types</option>
               <option value="SERVICE">Services</option>
@@ -418,17 +455,27 @@ function GraphView() {
                 <select
                   value={layoutName}
                   onChange={(e) => setLayoutName(e.target.value as any)}
-                  style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem' }}
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
                 >
                   <option value="cose">CoSE (Force)</option>
                   <option value="breadthfirst">Breadth-First</option>
                   <option value="concentric">Concentric</option>
                   <option value="circle">Circle</option>
                 </select>
-                <button className="btn-small btn-secondary" onClick={handleZoomIn} title="Zoom In">+</button>
-                <button className="btn-small btn-secondary" onClick={handleZoomOut} title="Zoom Out">-</button>
-                <button className="btn-small btn-secondary" onClick={handleFit} title="Fit to screen">Fit</button>
-                <button className="btn-small btn-secondary" onClick={handleExportPNG} title="Export PNG">📷 Export PNG</button>
+                <button className="btn-small btn-secondary" onClick={handleZoomIn} title="Zoom In">
+                  <ZoomIn size={14} />
+                </button>
+                <button className="btn-small btn-secondary" onClick={handleZoomOut} title="Zoom Out">
+                  <ZoomOut size={14} />
+                </button>
+                <button className="btn-small btn-secondary" onClick={handleFit} title="Fit to screen">
+                  <Maximize2 size={14} />
+                  Fit
+                </button>
+                <button className="btn-small btn-secondary" onClick={handleExportPNG} title="Export PNG">
+                  <Camera size={14} />
+                  Export PNG
+                </button>
               </>
             )}
           </div>
@@ -439,11 +486,14 @@ function GraphView() {
           <div
             ref={containerRef}
             className="cytoscape-canvas"
-            style={{ width: '100%', height: '560px', position: 'relative' }}
+            style={{ width: '100%', height: '580px', position: 'relative' }}
           />
         ) : (
           <div className="simple-graph-view">
-            <h4>Architecture Components ({nodes.length})</h4>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Layers size={18} color="#38bdf8" />
+              Architecture Components ({nodes.length})
+            </h4>
             <div className="nodes-list">
               {nodes
                 .filter((n) => filterType === 'ALL' || n.type.toUpperCase() === filterType.toUpperCase())
@@ -456,8 +506,8 @@ function GraphView() {
                   >
                     <strong>{node.name}</strong>
                     <p className="node-type">{node.type}</p>
-                    {node.language && <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Lang: {node.language}</p>}
-                    {node.path && <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{node.method} {node.path}</p>}
+                    {node.language && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Lang: {node.language}</p>}
+                    {node.path && <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{node.method} {node.path}</p>}
                   </div>
                 ))}
             </div>
@@ -471,7 +521,8 @@ function GraphView() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3>Component Details: {selectedNode.name}</h3>
             <button className="btn-small btn-secondary" onClick={() => setSelectedNode(null)}>
-              ✕ Close
+              <X size={14} />
+              Close
             </button>
           </div>
           <div className="details-grid">

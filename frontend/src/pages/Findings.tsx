@@ -1,5 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import {
+  ShieldAlert,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  Network,
+  Download,
+  FileCode,
+  FileText,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  ExternalLink,
+  ShieldCheck,
+} from 'lucide-react';
 import '../styles/Findings.css';
 
 interface FindingItem {
@@ -146,6 +161,7 @@ function Findings() {
   if (!activeScanId && !loading) {
     return (
       <div className="findings card empty-state">
+        <ShieldCheck size={40} color="#38bdf8" style={{ marginBottom: '12px' }} />
         <p>No scans found to display findings. Please run a scan first.</p>
         <Link to="/" className="btn-primary">Go to Dashboard</Link>
       </div>
@@ -158,8 +174,8 @@ function Findings() {
         <h2>Findings - {activeScanId?.substring(0, 8)}</h2>
 
         {availableScans.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 600 }}>Scan:</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Scan:</label>
             <select
               value={activeScanId || ''}
               onChange={(e) => setActiveScanId(e.target.value)}
@@ -177,7 +193,8 @@ function Findings() {
         {activeScanId && (
           <div>
             <Link to={`/scans/${activeScanId}`} className="btn-primary">
-              🕸️ View Architecture Graph
+              <Network size={15} />
+              View Architecture Graph
             </Link>
           </div>
         )}
@@ -187,18 +204,30 @@ function Findings() {
       {summary && (
         <div className="summary-cards">
           <div className="card summary-card summary-stat critical">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <ShieldAlert size={18} color="#ff3366" />
+            </div>
             <div className="number">{summary.findings_by_severity?.CRITICAL || 0}</div>
             <div className="label">Critical</div>
           </div>
           <div className="card summary-card summary-stat high">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <AlertTriangle size={18} color="#fb923c" />
+            </div>
             <div className="number">{summary.findings_by_severity?.HIGH || 0}</div>
             <div className="label">High</div>
           </div>
           <div className="card summary-card summary-stat medium">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <AlertCircle size={18} color="#facc15" />
+            </div>
             <div className="number">{summary.findings_by_severity?.MEDIUM || 0}</div>
             <div className="label">Medium</div>
           </div>
           <div className="card summary-card summary-stat low">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <CheckCircle2 size={18} color="#34d399" />
+            </div>
             <div className="number">{summary.findings_by_severity?.LOW || 0}</div>
             <div className="label">Low</div>
           </div>
@@ -221,13 +250,16 @@ function Findings() {
 
         <div className="action-group">
           <button className="btn-secondary" onClick={() => handleExportReport('json')}>
-            📥 Export JSON
+            <Download size={14} />
+            Export JSON
           </button>
           <button className="btn-secondary" onClick={() => handleExportReport('sarif')}>
-            🔗 Export SARIF
+            <FileCode size={14} />
+            Export SARIF
           </button>
           <button className="btn-secondary" onClick={() => handleExportReport('html')}>
-            📄 Export HTML
+            <FileText size={14} />
+            Export HTML
           </button>
         </div>
       </div>
@@ -238,6 +270,7 @@ function Findings() {
         <div className="findings card error"><p>Error: {error}</p></div>
       ) : findings.length === 0 ? (
         <div className="empty-state card">
+          <CheckCircle2 size={36} color="#34d399" style={{ marginBottom: '10px' }} />
           <p>No findings found for this filter.</p>
         </div>
       ) : (
@@ -267,13 +300,24 @@ function Findings() {
                       expandedFinding === finding.id ? null : finding.id
                     )}
                   >
-                    {expandedFinding === finding.id ? '▼ Less' : '▶ Details'}
+                    {expandedFinding === finding.id ? (
+                      <>
+                        <ChevronDown size={14} />
+                        Less
+                      </>
+                    ) : (
+                      <>
+                        <ChevronRight size={14} />
+                        Details
+                      </>
+                    )}
                   </button>
                   <button
                     className="btn-small btn-warning"
                     onClick={() => handleDismissFinding(finding.id)}
                   >
-                    ✓ Dismiss
+                    <Check size={14} />
+                    Dismiss
                   </button>
                 </div>
               </div>
@@ -311,6 +355,7 @@ function Findings() {
                               className="cwe-link"
                             >
                               {cwe.startsWith('CWE') ? cwe : `CWE-${cwe}`}
+                              <ExternalLink size={11} style={{ marginLeft: '4px', verticalAlign: 'middle' }} />
                             </a>
                           );
                         })}
@@ -353,6 +398,7 @@ function Findings() {
                             <li key={ref}>
                               <a href={ref} target="_blank" rel="noopener noreferrer">
                                 {label}
+                                <ExternalLink size={12} style={{ marginLeft: '4px', verticalAlign: 'middle' }} />
                               </a>
                             </li>
                           );
