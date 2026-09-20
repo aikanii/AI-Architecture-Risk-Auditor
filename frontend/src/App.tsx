@@ -36,22 +36,22 @@ function App() {
       <div className="App">
         <nav className="navbar">
           <div className="navbar-brand">
-            <h1>🏛️ AI Architecture Risk Auditor</h1>
+            <h1>🛡️ AI ARCHITECTURE AUDITOR</h1>
           </div>
           <ul className="nav-links">
             <li><Link to="/">Dashboard</Link></li>
             <li><Link to="/scans">Scans</Link></li>
-            <li><Link to="/graph">Graph</Link></li>
+            <li><Link to="/graph">Architecture Graph</Link></li>
             <li><Link to="/findings">Findings</Link></li>
             <li>
               <a
                 href="/docs"
                 target="_blank"
                 rel="noreferrer"
-                className="btn-primary"
-                style={{ padding: '0.4rem 0.8rem', textDecoration: 'none' }}
+                className="btn-primary btn-small"
+                style={{ textDecoration: 'none' }}
               >
-                API Docs
+                API Docs ↗
               </a>
             </li>
           </ul>

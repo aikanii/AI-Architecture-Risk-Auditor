@@ -106,12 +106,12 @@ function GraphView() {
 
   const getNodeColor = (nodeType: string) => {
     const colors: Record<string, string> = {
-      Service: '#10b981',
-      Endpoint: '#3b82f6',
-      DataStore: '#f59e0b',
-      ExternalDependency: '#8b5cf6',
+      Service: '#059669',
+      Endpoint: '#0284c7',
+      DataStore: '#d97706',
+      ExternalDependency: '#7c3aed',
     };
-    return colors[nodeType] || '#6b7280';
+    return colors[nodeType] || '#475569';
   };
 
   const getNodeShape = (nodeType: string): cytoscape.Css.NodeShape => {
@@ -177,34 +177,51 @@ function GraphView() {
               'background-color': 'data(color)',
               'label': 'data(label)',
               'shape': 'data(shape)' as any,
-              'color': '#1f2937',
+              'color': '#f8fafc',
+              'font-family': 'Inter, sans-serif',
               'font-size': '11px',
               'font-weight': 600,
               'text-valign': 'center',
               'text-halign': 'center',
               'text-wrap': 'wrap',
-              'text-max-width': '100px',
+              'text-max-width': '110px',
               'width': 'label',
               'height': '36px',
-              'padding': '10px',
+              'padding': '12px',
               'border-width': 2,
-              'border-color': '#ffffff',
+              'border-color': 'rgba(255, 255, 255, 0.3)',
               'overlay-opacity': 0,
             },
           },
           {
             selector: 'node[type = "Service"]',
             style: {
-              'height': '46px',
+              'height': '44px',
               'padding': '14px',
               'color': '#ffffff',
               'font-size': '12px',
+              'border-width': 2,
+              'border-color': '#34d399',
+            },
+          },
+          {
+            selector: 'node[type = "DataStore"]',
+            style: {
+              'border-width': 2,
+              'border-color': '#fbbf24',
+            },
+          },
+          {
+            selector: 'node[type = "Endpoint"]',
+            style: {
+              'border-width': 2,
+              'border-color': '#38bdf8',
             },
           },
           {
             selector: 'node:selected',
             style: {
-              'border-color': '#2563eb',
+              'border-color': '#38bdf8',
               'border-width': 4,
             } as any,
           },
@@ -212,16 +229,17 @@ function GraphView() {
             selector: 'edge',
             style: {
               'width': 2,
-              'line-color': '#94a3b8',
+              'line-color': '#475569',
               'target-arrow-color': '#64748b',
               'target-arrow-shape': 'triangle',
               'curve-style': 'bezier',
               'label': 'data(label)',
+              'font-family': 'JetBrains Mono, monospace',
               'font-size': '9px',
-              'color': '#64748b',
-              'text-background-opacity': 0.8,
-              'text-background-color': '#ffffff',
-              'text-background-padding': '2px',
+              'color': '#94a3b8',
+              'text-background-opacity': 0.85,
+              'text-background-color': '#0f172a',
+              'text-background-padding': '3px',
               'text-background-shape': 'round-rectangle',
             },
           },
@@ -229,14 +247,21 @@ function GraphView() {
             selector: 'edge[type = "WRITES_TO"]',
             style: {
               'line-color': '#f59e0b',
-              'target-arrow-color': '#d97706',
+              'target-arrow-color': '#f59e0b',
             },
           },
           {
             selector: 'edge[type = "READS_FROM"]',
             style: {
-              'line-color': '#3b82f6',
-              'target-arrow-color': '#2563eb',
+              'line-color': '#38bdf8',
+              'target-arrow-color': '#38bdf8',
+            },
+          },
+          {
+            selector: 'edge[type = "CALLS"]',
+            style: {
+              'line-color': '#818cf8',
+              'target-arrow-color': '#818cf8',
             },
           },
         ],

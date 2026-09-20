@@ -98,13 +98,13 @@ function Findings() {
 
   const getSeverityColor = (severity: string) => {
     const colors: Record<string, string> = {
-      CRITICAL: '#d32f2f',
-      HIGH: '#f57c00',
-      MEDIUM: '#fbc02d',
-      LOW: '#388e3c',
-      INFO: '#1976d2',
+      CRITICAL: '#ff3366',
+      HIGH: '#fb923c',
+      MEDIUM: '#facc15',
+      LOW: '#34d399',
+      INFO: '#38bdf8',
     };
-    return colors[severity] || '#757575';
+    return colors[severity] || '#94a3b8';
   };
 
   const handleDismissFinding = async (findingId: string) => {
