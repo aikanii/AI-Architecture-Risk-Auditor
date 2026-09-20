@@ -1,0 +1,133 @@
+/* GraphView styles */
+.graph-view h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1a202c;
+}
+
+.graph-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  min-height: 600px;
+}
+
+.graph-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.graph-toolbar-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.graph-legend {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.graph-legend h4 {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.legend-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.cytoscape-canvas {
+  width: 100%;
+  height: 550px;
+  background-color: #fcfcfc;
+}
+
+.node-details {
+  margin-top: 1.5rem;
+}
+
+.node-details h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #edf2f7;
+}
+
+.simple-graph-view {
+  padding: 1.5rem;
+}
+
+.simple-graph-view h4 {
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.nodes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.node-card {
+  padding: 1rem;
+  border: 2px solid #cbd5e0;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.node-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+}
+
+.node-card .node-type {
+  font-size: 0.8rem;
+  color: #718096;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+.risk-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  margin-top: 0.5rem;
+}

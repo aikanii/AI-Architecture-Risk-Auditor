@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/reports", tags=["reports"])
 @router.get("/{scan_id}/export")
 async def export_report(
     scan_id: str,
-    format: str = Query("json", regex="^(json|sarif|html|pdf)$"),
+    format: str = Query("json", pattern="^(json|sarif|html|pdf)$"),
 ):
     """
     Export a complete report in the specified format.

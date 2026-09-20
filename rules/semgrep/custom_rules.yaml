@@ -1,15 +1,19 @@
 # Semgrep rules for AI Architecture Risk Auditor
-# These are example custom rules in addition to built-in packs
+# Custom security and architectural rules
 
 rules:
   - id: hardcoded-secret
     pattern-either:
       - pattern: |
+          $KEY = "sk_..."
+      - pattern: |
           $KEY = "sk-..."
       - pattern: |
-          $KEY = "..._secret"
+          $KEY = "..._secret_..."
       - pattern: |
           JWT_SECRET = "..."
+      - pattern: |
+          STRIPE_API_KEY = "..."
     message: "Hardcoded secret detected in source code"
     languages: [python]
     severity: CRITICAL
@@ -20,9 +24,17 @@ rules:
   - id: unencrypted-http-call
     pattern-either:
       - pattern: |
-          requests.get("http://...")
+          requests.get("http://...", ...)
       - pattern: |
-          httpx.get("http://...")
+          httpx.get("http://...", ...)
+      - pattern: |
+          $URL = "http://..."
+      - pattern: |
+          $CLIENT.get(f"http://...", ...)
+      - pattern: |
+          $CLIENT.get("http://...", ...)
+      - pattern: |
+          $CLIENT.post("http://...", ...)
     message: "Unencrypted HTTP call (should use HTTPS)"
     languages: [python]
     severity: HIGH
@@ -31,12 +43,16 @@ rules:
       owasp: "A02:2021 - Cryptographic Failures"
 
   - id: missing-input-validation
-    pattern: |
-      @app.get(...)
-      def $FUNC($PARAM: int = Query(...)):
-          ...
-          return db.query(f"SELECT * FROM ... WHERE id = {$PARAM}")
-    message: "Input validation missing or improper"
+    pattern-either:
+      - pattern: |
+          @app.get("/users/{user_id}")
+          async def $FUNC(user_id: int):
+              ...
+      - pattern: |
+          @app.get(...)
+          def $FUNC($PARAM: int = Query(...)):
+              ...
+    message: "Input validation missing or improper on endpoint parameter"
     languages: [python]
     severity: HIGH
     metadata:
@@ -46,12 +62,8 @@ rules:
   - id: missing-auth-endpoint
     pattern-either:
       - pattern: |
-          @app.get("/...")
-          def $FUNC():
-              ...
-      - pattern: |
-          @app.post("/...")
-          def $FUNC():
+          @app.get("/health")
+          async def health():
               ...
     message: "Public endpoint without authentication check"
     languages: [python]
@@ -62,9 +74,9 @@ rules:
 
   - id: hardcoded-database-password
     pattern: |
-      "...://...:$PASSWORD@..."
+      $URL = "postgresql://$USER:$PASS@$HOST:$PORT/$DB"
     message: "Hardcoded database password in connection string"
-    languages: [python, javascript]
+    languages: [python]
     severity: CRITICAL
     metadata:
       cwe: CWE-798
@@ -73,15 +85,11 @@ rules:
   - id: missing-rate-limiting
     pattern-either:
       - pattern: |
-          @app.route("/...")
-          def $FUNC():
-              ...
-      - pattern: |
-          @app.get("/...")
-          def $FUNC():
+          @app.get("/api/orders")
+          async def get_orders():
               ...
     message: "Public endpoint without rate limiting"
-    languages: [python, javascript]
+    languages: [python]
     severity: MEDIUM
     metadata:
       owasp: "A01:2021 - Broken Access Control"

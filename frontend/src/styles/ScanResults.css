@@ -1,0 +1,92 @@
+/* ScanResults styles */
+.scan-results h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1a202c;
+}
+
+.filters {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  padding: 0;
+}
+
+.scans-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.scans-table th {
+  background-color: #f7fafc;
+  padding: 0.85rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #4a5568;
+  border-bottom: 2px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.scans-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 0.95rem;
+}
+
+.scans-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.scan-id code {
+  font-family: monospace;
+  background-color: #edf2f7;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #2b6cb0;
+}
+
+.repo-info {
+  max-width: 350px;
+  word-break: break-all;
+  color: #4a5568;
+}
+
+.date {
+  color: #718096;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.results-info {
+  color: #718096;
+  font-size: 0.85rem;
+}

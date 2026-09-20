@@ -7,9 +7,9 @@ import GraphView from './pages/GraphView';
 import Findings from './pages/Findings';
 
 function App() {
-  const [scans, setScans] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [scans, setScans] = useState<any[]>([]);
+  const [, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch recent scans on mount
   useEffect(() => {
@@ -19,11 +19,12 @@ function App() {
   const fetchScans = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/scans/?limit=10');
+      setError(null);
+      const response = await fetch('/api/scans/?limit=20');
       if (!response.ok) throw new Error('Failed to fetch scans');
       const data = await response.json();
-      setScans(data);
-    } catch (err) {
+      setScans(data || []);
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -39,9 +40,20 @@ function App() {
           </div>
           <ul className="nav-links">
             <li><Link to="/">Dashboard</Link></li>
-            <li><Link to="/scans">Recent Scans</Link></li>
+            <li><Link to="/scans">Scans</Link></li>
+            <li><Link to="/graph">Graph</Link></li>
             <li><Link to="/findings">Findings</Link></li>
-            <li><button className="btn-primary" onClick={() => window.location.href = '/docs'}>API Docs</button></li>
+            <li>
+              <a
+                href="/docs"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary"
+                style={{ padding: '0.4rem 0.8rem', textDecoration: 'none' }}
+              >
+                API Docs
+              </a>
+            </li>
           </ul>
         </nav>
 
@@ -51,13 +63,18 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard scans={scans} />} />
             <Route path="/scans" element={<ScanResults scans={scans} onRefresh={fetchScans} />} />
+            <Route path="/graph" element={<GraphView />} />
             <Route path="/scans/:scanId" element={<GraphView />} />
+            <Route path="/findings" element={<Findings />} />
             <Route path="/findings/:scanId" element={<Findings />} />
           </Routes>
         </main>
 
         <footer className="footer">
-          <p>AI Architecture Risk Auditor v0.1.0 | <a href="https://github.com">GitHub</a> | <a href="/docs">Documentation</a></p>
+          <p>
+            AI Architecture Risk Auditor v0.1.0 | Microservices Architecture Security & Risk Analysis |{' '}
+            <a href="/docs" target="_blank" rel="noreferrer">OpenAPI Documentation</a>
+          </p>
         </footer>
       </div>
     </Router>

@@ -7,25 +7,26 @@ from app.graph.db import get_db_connection
 from app.graph.repository import GraphRepository
 
 
+@pytest.fixture(scope="module")
+def scan_result():
+    """Run scan against demo repo and cache results."""
+    demo_repo_path = Path(__file__).parent.parent.parent / "test-fixtures" / "demo-repo"
+    
+    pipeline = ScanPipeline()
+    scan_id = pipeline.scan(
+        scan_id="test-demo-scan",
+        repository_source={"type": "local", "path": str(demo_repo_path)},
+        skip_ai=False,
+    )
+    
+    return {
+        "scan_id": scan_id,
+        "demo_repo_path": demo_repo_path,
+    }
+
+
 class TestDemoRepoVulnerabilities:
     """Tests that verify the demo repo vulnerabilities are detected."""
-    
-    @pytest.fixture(scope="class")
-    def scan_result(self):
-        """Run scan against demo repo and cache results."""
-        demo_repo_path = Path(__file__).parent.parent.parent / "test-fixtures" / "demo-repo"
-        
-        pipeline = ScanPipeline()
-        scan_id = pipeline.scan(
-            scan_id="test-demo-scan",
-            repository_source={"type": "local", "path": str(demo_repo_path)},
-            skip_ai=False,
-        )
-        
-        return {
-            "scan_id": scan_id,
-            "demo_repo_path": demo_repo_path,
-        }
     
     @pytest.mark.acceptance
     def test_detects_unprotected_endpoint(self, scan_result):

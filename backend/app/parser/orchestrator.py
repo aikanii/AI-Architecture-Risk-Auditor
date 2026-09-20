@@ -74,6 +74,8 @@ class MultiLanguageParser:
                 "env_vars": [],
                 "datastore_access": [],
                 "config_refs": [],
+                "auth_checks": [],
+                "secrets": [],
                 "errors": [f"Unsupported language: {file_path}"]
             }
         
@@ -86,6 +88,8 @@ class MultiLanguageParser:
                 "env_vars": [],
                 "datastore_access": [],
                 "config_refs": [],
+                "auth_checks": [],
+                "secrets": [],
                 "errors": [f"No parser for language: {language}"]
             }
         
@@ -106,22 +110,24 @@ class MultiLanguageParser:
             exclude_patterns: Patterns to exclude
             
         Returns:
-            Dictionary mapping file paths to parsed data
+            Dictionary mapping relative file paths to parsed data
         """
         from pathlib import Path
         import fnmatch
         
-        include_patterns = include_patterns or ["**/*.py", "**/*.js", "**/*.ts", "**/*.java", "**/*.go"]
-        exclude_patterns = exclude_patterns or ["node_modules/**", "vendor/**", "dist/**", "build/**"]
+        include_patterns = include_patterns or ["**/*.py", "**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx"]
+        exclude_patterns = exclude_patterns or ["**/node_modules/**", "**/vendor/**", "**/dist/**", "**/build/**", "**/.git/**"]
         
         results = {}
-        root = Path(directory)
+        root = Path(directory).resolve()
         
         for pattern in include_patterns:
             for file_path in root.glob(pattern):
                 # Check exclude patterns
                 file_str = str(file_path)
-                if any(fnmatch.fnmatch(file_str, ex) for ex in exclude_patterns):
+                rel_str = str(file_path.relative_to(root)).replace("\\", "/")
+                
+                if any(fnmatch.fnmatch(file_str, ex) or fnmatch.fnmatch(rel_str, ex) for ex in exclude_patterns):
                     continue
                 
                 if file_path.is_file():
@@ -129,10 +135,9 @@ class MultiLanguageParser:
                         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                             content = f.read()
                         
-                        rel_path = str(file_path.relative_to(root))
-                        results[rel_path] = self.parse_file(str(file_path), content)
+                        results[rel_str] = self.parse_file(str(file_path), content)
                     except Exception as e:
                         logger.error(f"Error parsing {file_path}: {e}")
-                        results[str(file_path)] = {"errors": [str(e)]}
+                        results[rel_str] = {"errors": [str(e)]}
         
         return results
