@@ -1,39 +1,64 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Plus, RefreshCw, Network, Search, Trash2 } from 'lucide-react';
 import '../styles/ScanResults.css';
 
-function ScanResults({ scans, onRefresh }) {
+interface ScanItem {
+  scan_id: string;
+  status: string;
+  created_at: string;
+  updated_at?: string;
+  repository_source?: {
+    path?: string;
+    url?: string;
+    type?: string;
+  };
+}
+
+interface ScanResultsProps {
+  scans: ScanItem[];
+  onRefresh: () => void;
+}
+
+function ScanResults({ scans, onRefresh }: ScanResultsProps) {
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [sortBy, setSortBy] = useState('date-desc');
+  const [refreshing, setRefreshing] = useState(false);
 
   const filteredScans = selectedStatus === 'ALL' 
     ? scans 
-    : scans.filter(s => s.status === selectedStatus);
+    : scans.filter((s) => s.status === selectedStatus);
 
   const sortedScans = [...filteredScans].sort((a, b) => {
     if (sortBy === 'date-desc') {
-      return new Date(b.created_at) - new Date(a.created_at);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     } else if (sortBy === 'date-asc') {
-      return new Date(a.created_at) - new Date(b.created_at);
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     }
     return 0;
   });
 
-  const handleDeleteScan = async (scanId) => {
+  const handleRefreshClick = () => {
+    setRefreshing(true);
+    onRefresh();
+    setTimeout(() => setRefreshing(false), 600);
+  };
+
+  const handleDeleteScan = async (scanId: string) => {
     if (window.confirm(`Delete scan ${scanId}?`)) {
       try {
         const response = await fetch(`/api/scans/${scanId}`, { method: 'DELETE' });
         if (response.ok) {
           onRefresh();
         }
-      } catch (err) {
+      } catch (err: any) {
         alert(`Error deleting scan: ${err.message}`);
       }
     }
   };
 
-  const getStatusBadge = (status) => {
-    const colors = {
+  const getStatusBadge = (status: string) => {
+    const colors: Record<string, string> = {
       QUEUED: 'badge-warning',
       RUNNING: 'badge-info',
       COMPLETED: 'badge-success',
@@ -44,7 +69,13 @@ function ScanResults({ scans, onRefresh }) {
 
   return (
     <div className="scan-results">
-      <h2>Scan Results</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2>Scan History</h2>
+        <Link to="/" className="btn-primary">
+          <Plus size={15} />
+          New Scan
+        </Link>
+      </div>
 
       {/* Filters */}
       <div className="filters card">
@@ -67,15 +98,16 @@ function ScanResults({ scans, onRefresh }) {
           </select>
         </div>
 
-        <button className="btn-secondary" onClick={onRefresh}>
-          🔄 Refresh
+        <button className="btn-secondary" onClick={handleRefreshClick}>
+          <RefreshCw size={14} className={refreshing ? 'spin' : ''} />
+          Refresh
         </button>
       </div>
 
       {/* Results Table */}
       {sortedScans.length === 0 ? (
         <div className="empty-state card">
-          <p>No scans found. <Link to="/">Start a new scan</Link></p>
+          <p>No scans found matching criteria. <Link to="/">Start a new scan</Link></p>
         </div>
       ) : (
         <div className="table-responsive card">
@@ -96,7 +128,7 @@ function ScanResults({ scans, onRefresh }) {
                     <code>{scan.scan_id.substring(0, 12)}</code>
                   </td>
                   <td className="repo-info">
-                    {scan.repository_source?.path || scan.repository_source?.url || 'Unknown'}
+                    {scan.repository_source?.path || scan.repository_source?.url || 'Demo Repository'}
                   </td>
                   <td>
                     <span className={`badge ${getStatusBadge(scan.status)}`}>
@@ -110,15 +142,19 @@ function ScanResults({ scans, onRefresh }) {
                   </td>
                   <td className="actions">
                     <Link to={`/scans/${scan.scan_id}`} className="btn-small btn-primary">
+                      <Network size={13} />
                       Graph
                     </Link>
                     <Link to={`/findings/${scan.scan_id}`} className="btn-small btn-secondary">
+                      <Search size={13} />
                       Findings
                     </Link>
                     <button 
                       className="btn-small btn-danger"
                       onClick={() => handleDeleteScan(scan.scan_id)}
+                      title="Delete Scan"
                     >
+                      <Trash2 size={13} />
                       Delete
                     </button>
                   </td>

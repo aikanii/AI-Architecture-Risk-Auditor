@@ -2,11 +2,46 @@
 import subprocess
 import json
 import logging
+import shutil
+import sys
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from app.config import Settings
 
 logger = logging.getLogger(__name__)
+
+RULE_REMEDIATIONS = {
+    "hardcoded-secret": [
+        "Move sensitive keys and credentials to environment variables",
+        "Use a secrets manager (e.g. AWS Secrets Manager, HashiCorp Vault)",
+        "Rotate the compromised key immediately",
+    ],
+    "unencrypted-http-call": [
+        "Use HTTPS/TLS for all inter-service communications",
+        "Enforce transport layer encryption with mTLS",
+        "Configure HTTP clients with TLS certificate validation",
+    ],
+    "missing-input-validation": [
+        "Validate all request parameters against strict schemas",
+        "Enforce type, length, and format restrictions on input data",
+        "Use parameterized queries and avoid string concatenation",
+    ],
+    "missing-auth-endpoint": [
+        "Add authentication middleware or dependency to this endpoint",
+        "Enforce role-based access control (RBAC)",
+        "Require valid JWT token or API key for non-public routes",
+    ],
+    "hardcoded-database-password": [
+        "Move database credentials to secure environment variables",
+        "Use IAM database authentication or secrets manager",
+        "Ensure connection strings are not hardcoded in source code",
+    ],
+    "missing-rate-limiting": [
+        "Implement rate limiting middleware on public endpoints",
+        "Use token bucket or sliding window algorithms to throttle requests",
+        "Configure per-IP or per-user rate limit quotas",
+    ],
+}
 
 
 class SemgrepRunner:
@@ -17,6 +52,20 @@ class SemgrepRunner:
         self.timeout = settings.semgrep.timeout
         self.config_url = settings.semgrep.config_url
     
+    def _find_semgrep(self) -> str:
+        """Find the semgrep executable."""
+        which_path = shutil.which("semgrep")
+        if which_path:
+            return which_path
+        
+        # Check python env bin dir
+        bin_dir = Path(sys.executable).parent
+        candidate = bin_dir / "semgrep"
+        if candidate.exists():
+            return str(candidate)
+        
+        return "semgrep"
+
     def run(self, target_path: str, config: Optional[str] = None) -> Dict[str, Any]:
         """
         Run Semgrep on a target directory.
@@ -29,14 +78,20 @@ class SemgrepRunner:
             Parsed Semgrep output with findings
         """
         try:
-            cmd = ["semgrep", "--json"]
+            semgrep_bin = self._find_semgrep()
+            cmd = [semgrep_bin, "--json", "--metrics=off", "--disable-version-check"]
             
             # Add target
             cmd.append(target_path)
             
-            # Add config
+            # Determine config to use
+            rule_pack_mgr = RulePackManager(self.settings)
+            custom_config = rule_pack_mgr.load_custom_rules()
+            
             if config:
                 cmd.extend(["-c", config])
+            elif custom_config:
+                cmd.extend(["-c", custom_config])
             else:
                 cmd.extend(["-c", self.config_url])
             
@@ -52,22 +107,24 @@ class SemgrepRunner:
                 timeout=self.timeout + 10,
             )
             
-            if result.returncode not in [0, 1]:  # 0 = no findings, 1 = findings found
-                logger.error(f"Semgrep error: {result.stderr}")
+            # Parse output from stdout if available
+            if result.stdout and result.stdout.strip().startswith("{"):
+                try:
+                    output = json.loads(result.stdout)
+                    findings = self._normalize_findings(output.get("results", []))
+                    return {
+                        "findings": findings,
+                        "errors": output.get("errors", []),
+                        "stats": output.get("stats", {}),
+                    }
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse Semgrep output: {e}")
+            
+            if result.returncode not in [0, 1]:
+                logger.warning(f"Semgrep returncode {result.returncode}: {result.stderr}")
                 return {"findings": [], "errors": [result.stderr]}
             
-            # Parse output
-            try:
-                output = json.loads(result.stdout)
-                findings = self._normalize_findings(output.get("results", []))
-                return {
-                    "findings": findings,
-                    "errors": output.get("errors", []),
-                    "stats": output.get("stats", {}),
-                }
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse Semgrep output: {e}")
-                return {"findings": [], "errors": [str(e)]}
+            return {"findings": [], "errors": []}
         
         except subprocess.TimeoutExpired:
             logger.error(f"Semgrep timeout after {self.timeout}s")
@@ -89,41 +146,107 @@ class SemgrepRunner:
         findings = []
         
         for result in semgrep_results:
-            # Extract severity from metadata
-            metadata = result.get("extra", {}).get("metadata", {})
-            severity = metadata.get("severity", "MEDIUM").upper()
+            raw_rule_id = result.get("check_id", "semgrep-rule")
+            base_rule_id = raw_rule_id.split(".")[-1]
             
-            # Map Semgrep severity to our levels
-            semgrep_severity = result.get("extra", {}).get("severity", "WARNING").upper()
-            if semgrep_severity == "ERROR":
+            metadata = result.get("extra", {}).get("metadata", {})
+            
+            # Determine severity
+            raw_severity = result.get("extra", {}).get("severity", "").upper()
+            meta_severity = metadata.get("severity", "").upper()
+            
+            if raw_severity == "CRITICAL" or meta_severity == "CRITICAL":
+                severity = "CRITICAL"
+            elif raw_severity == "ERROR" or meta_severity == "HIGH":
                 severity = "HIGH"
-            elif semgrep_severity == "WARNING":
+            elif raw_severity == "WARNING" or meta_severity == "MEDIUM":
                 severity = "MEDIUM"
-            else:
+            elif raw_severity == "INFO" or meta_severity == "LOW":
                 severity = "LOW"
+            else:
+                severity = "MEDIUM"
             
             # Extract CWE/OWASP
             cwe_ids = []
             owasp_categories = []
             
             if "cwe" in metadata:
-                cwe_ids = [metadata["cwe"]] if isinstance(metadata["cwe"], str) else metadata.get("cwe", [])
+                val = metadata["cwe"]
+                if isinstance(val, list):
+                    cwe_ids = val
+                elif isinstance(val, (int, str)):
+                    cwe_ids = [val]
+            elif "cwe_ids" in metadata:
+                cwe_ids = metadata["cwe_ids"]
+            
+            if not cwe_ids:
+                # Default CWE mapping for common rules
+                if "secret" in base_rule_id:
+                    cwe_ids = ["CWE-798"]
+                elif "unencrypted" in base_rule_id:
+                    cwe_ids = ["CWE-319"]
+                elif "auth" in base_rule_id:
+                    cwe_ids = ["CWE-306"]
+                elif "input" in base_rule_id:
+                    cwe_ids = ["CWE-20"]
+                elif "rate" in base_rule_id:
+                    cwe_ids = ["CWE-770"]
+                else:
+                    cwe_ids = ["CWE-1088"]
             
             if "owasp" in metadata:
-                owasp_categories = metadata.get("owasp", [])
+                val = metadata["owasp"]
+                if isinstance(val, list):
+                    owasp_categories = val
+                else:
+                    owasp_categories = [str(val)]
+            else:
+                owasp_categories = ["A01:2021 - Broken Access Control"]
+            
+            # Remediation
+            remediation_steps = RULE_REMEDIATIONS.get(base_rule_id, [
+                "Review and apply security best practices for this pattern",
+                "Ensure strict input validation and access controls",
+            ])
+            
+            file_path = result.get("path", "")
+            # Derive component from file path
+            parts = Path(file_path).parts
+            component = parts[0] if parts else "service"
+            if len(parts) > 1 and parts[0] in ["test-fixtures", "demo-repo"]:
+                component = parts[-2]
+            
+            message = result.get("extra", {}).get("message", "")
+            title = f"{base_rule_id.replace('-', ' ').title()}: {Path(file_path).name}"
+            if "secret" in base_rule_id:
+                title = f"Hardcoded Secret in {Path(file_path).parent.name}"
+            elif "auth" in base_rule_id:
+                title = f"Unprotected Endpoint in {Path(file_path).parent.name}"
+            elif "unencrypted" in base_rule_id:
+                title = f"Unencrypted HTTP Call in {Path(file_path).parent.name}"
+            elif "rate" in base_rule_id:
+                title = f"Missing Rate Limiting in {Path(file_path).parent.name}"
+            elif "input" in base_rule_id:
+                title = f"Missing Input Validation in {Path(file_path).parent.name}"
             
             finding = {
-                "rule_id": result.get("check_id"),
-                "title": result.get("check_id", "Unknown Rule"),
-                "message": result.get("extra", {}).get("message", result.get("extra", {}).get("description", "")),
+                "rule_id": raw_rule_id,
+                "title": title,
+                "description": message or f"Static analysis flagged {base_rule_id} in {file_path}",
                 "severity": severity,
-                "confidence": 0.9,  # Semgrep findings are high-confidence
+                "confidence": 0.95,
                 "source": "semgrep",
-                "file_path": result.get("path"),
+                "file_path": file_path,
                 "line_number": result.get("start", {}).get("line"),
                 "column": result.get("start", {}).get("col"),
+                "affected_components": [component],
                 "cwe_ids": cwe_ids,
                 "owasp_categories": owasp_categories,
+                "remediation_steps": remediation_steps,
+                "references": [
+                    f"https://cwe.mitre.org/data/definitions/{cwe.replace('CWE-', '')}.html"
+                    for cwe in cwe_ids if isinstance(cwe, str) and cwe.startswith("CWE-")
+                ] or ["https://owasp.org/www-project-top-ten/"],
             }
             
             findings.append(finding)
@@ -133,7 +256,8 @@ class SemgrepRunner:
     def validate_config(self, config: str) -> bool:
         """Check if Semgrep config is valid."""
         try:
-            cmd = ["semgrep", "-c", config, "--validate"]
+            semgrep_bin = self._find_semgrep()
+            cmd = [semgrep_bin, "-c", config, "--validate", "--metrics=off"]
             result = subprocess.run(cmd, capture_output=True, timeout=10)
             return result.returncode == 0
         except Exception as e:
@@ -162,10 +286,14 @@ class RulePackManager:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.rules_dir = Path("rules/semgrep")
+        if not self.rules_dir.exists():
+            # Check relative to repo root
+            candidate = Path(__file__).parent.parent.parent.parent / "rules" / "semgrep"
+            if candidate.exists():
+                self.rules_dir = candidate
     
     def get_config_for_language(self, language: str) -> str:
         """Get Semgrep config for a language."""
-        # Return default config URLs
         return " ".join(self.DEFAULT_RULES.get("common", []))
     
     def list_available_packs(self) -> List[str]:
@@ -179,7 +307,6 @@ class RulePackManager:
         
         yaml_files = list(self.rules_dir.glob("*.yaml")) + list(self.rules_dir.glob("*.yml"))
         if yaml_files:
-            # Semgrep can combine multiple config files
-            return ",".join(str(f) for f in yaml_files)
+            return ",".join(str(f.resolve()) for f in yaml_files)
         
         return None

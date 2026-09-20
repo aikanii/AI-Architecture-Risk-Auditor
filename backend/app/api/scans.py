@@ -38,24 +38,32 @@ async def initiate_scan(request: ScanRequest, background_tasks: BackgroundTasks)
         db = get_db_connection()
         graph_repo = GraphRepository(db)
         
+        repo_dict = (
+            request.repository.model_dump()
+            if hasattr(request.repository, 'model_dump')
+            else request.repository.dict()
+            if hasattr(request.repository, 'dict')
+            else dict(request.repository)
+        )
+        
         scan_obj = Scan(
             id=scan_id,
             status=ScanStatus.QUEUED,
-            repository_source=request.repository,
+            repository_source=repo_dict,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
         
         graph_repo.create_scan(scan_obj)
-        logger.info(f"Created scan {scan_id} for repository {request.repository}")
+        logger.info(f"Created scan {scan_id} for repository {repo_dict}")
         
         # Queue scan in background
         pipeline = ScanPipeline()
         background_tasks.add_task(
             pipeline.scan,
             scan_id=scan_id,
-            repository_source=request.repository,
-            skip_ai=getattr(request, 'skip_ai', False),
+            repository_source=repo_dict,
+            skip_ai=getattr(request, 'skip_ai', False) or getattr(request, 'skip_ai_layer', False),
         )
         
         return ScanResponse(

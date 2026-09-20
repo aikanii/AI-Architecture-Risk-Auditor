@@ -23,13 +23,13 @@ class FindingDeduplicator:
         if not findings:
             return []
         
-        # Group findings by affected components and type
-        groups: Dict[str, List[Finding]] = {}
+        # Group findings by affected components and title category
+        groups: Dict[Any, List[Finding]] = {}
         
         for finding in findings:
-            # Create grouping key based on affected components and title pattern
-            key_components = tuple(sorted(finding.affected_components))
-            key = (key_components, finding.title.split(':')[0])  # Use base title
+            key_components = tuple(sorted(finding.affected_components or []))
+            base_title = finding.title.split(':')[0].strip().lower()
+            key = (key_components, base_title)
             
             if key not in groups:
                 groups[key] = []
@@ -62,13 +62,25 @@ class FindingDeduplicator:
         highest_confidence = max(f.confidence for f in findings)
         
         # Combine all sources
-        sources = set(f.source.value for f in findings)
-        is_hybrid = len(sources) > 1
+        sources = set(
+            f.source.value if hasattr(f.source, 'value') else str(f.source)
+            for f in findings
+        )
         
         # Merge descriptions and remediation
         descriptions = [f.description for f in findings if f.description]
         remediation_steps = list(dict.fromkeys(
-            step for f in findings for step in f.remediation_steps
+            step for f in findings for step in (f.remediation_steps or [])
+        ))
+        
+        cwe_ids = list(dict.fromkeys(
+            c for f in findings for c in (f.cwe_ids or [])
+        ))
+        owasp_categories = list(dict.fromkeys(
+            o for f in findings for o in (f.owasp_categories or [])
+        ))
+        references = list(dict.fromkeys(
+            ref for f in findings for ref in (f.references or [])
         ))
         
         # Keep the first finding as base
@@ -78,34 +90,36 @@ class FindingDeduplicator:
             id=base.id,
             scan_id=base.scan_id,
             title=base.title,
-            description="\n".join(descriptions),
+            description="\n".join(dict.fromkeys(descriptions)),
             severity=highest_severity,
             confidence=highest_confidence,
-            source=base.source,  # Keep original primary source
-            affected_components=list(set(
-                c for f in findings for c in f.affected_components
+            source=base.source,
+            source_rule=getattr(base, 'source_rule', None) or base.semgrep_rule_id or base.cypher_rule_name,
+            affected_components=list(dict.fromkeys(
+                c for f in findings for c in (f.affected_components or [])
             )),
-            affected_endpoints=list(set(
-                e for f in findings for e in f.affected_endpoints
+            affected_endpoints=list(dict.fromkeys(
+                e for f in findings for e in (f.affected_endpoints or [])
             )),
-            affected_data_stores=list(set(
-                d for f in findings for d in f.affected_data_stores
+            affected_data_stores=list(dict.fromkeys(
+                d for f in findings for d in (f.affected_data_stores or [])
             )),
+            cwe_ids=cwe_ids,
+            owasp_categories=owasp_categories,
             remediation_steps=remediation_steps,
-            references=list(dict.fromkeys(
-                ref for f in findings for ref in f.references
-            )),
+            references=references,
             is_duplicate=True if len(findings) > 1 else False,
         )
 
 
-def _severity_rank(severity: Severity) -> int:
+def _severity_rank(severity: Any) -> int:
     """Get numeric rank of severity for comparison."""
+    sev_val = severity.value.upper() if hasattr(severity, 'value') else str(severity).upper()
     ranks = {
-        Severity.CRITICAL: 5,
-        Severity.HIGH: 4,
-        Severity.MEDIUM: 3,
-        Severity.LOW: 2,
-        Severity.INFO: 1,
+        "CRITICAL": 5,
+        "HIGH": 4,
+        "MEDIUM": 3,
+        "LOW": 2,
+        "INFO": 1,
     }
-    return ranks.get(severity, 0)
+    return ranks.get(sev_val, 0)

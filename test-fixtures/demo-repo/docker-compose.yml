@@ -1,4 +1,4 @@
-"""Docker Compose for demo vulnerable repo"""
+# Docker Compose for demo vulnerable repo
 version: '3.8'
 
 services:

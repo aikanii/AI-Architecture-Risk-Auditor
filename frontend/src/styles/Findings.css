@@ -1,0 +1,211 @@
+/* ==========================================================================
+   Findings - Tech Glassmorphic Design
+   ========================================================================== */
+
+.findings h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.75rem;
+}
+
+.action-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+/* Glassmorphic Finding Cards */
+.finding-card {
+  position: relative;
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.finding-card:hover {
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.finding-card.severity-critical {
+  border-left-color: var(--critical-color);
+  box-shadow: inset 2px 0 12px rgba(255, 51, 102, 0.15), var(--glass-shadow);
+}
+.finding-card.severity-critical:hover {
+  box-shadow: inset 2px 0 16px rgba(255, 51, 102, 0.25), var(--glass-shadow-hover);
+}
+
+.finding-card.severity-high {
+  border-left-color: var(--high-color);
+  box-shadow: inset 2px 0 12px rgba(251, 146, 60, 0.15), var(--glass-shadow);
+}
+.finding-card.severity-high:hover {
+  box-shadow: inset 2px 0 16px rgba(251, 146, 60, 0.25), var(--glass-shadow-hover);
+}
+
+.finding-card.severity-medium {
+  border-left-color: var(--medium-color);
+  box-shadow: inset 2px 0 12px rgba(250, 204, 21, 0.12), var(--glass-shadow);
+}
+
+.finding-card.severity-low {
+  border-left-color: var(--low-color);
+  box-shadow: inset 2px 0 12px rgba(52, 211, 153, 0.12), var(--glass-shadow);
+}
+
+.finding-card.severity-info {
+  border-left-color: var(--info-color);
+  box-shadow: inset 2px 0 12px rgba(56, 189, 248, 0.12), var(--glass-shadow);
+}
+
+.finding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.finding-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.finding-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.confidence-badge {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  padding: 0.25rem 0.6rem;
+  background: rgba(15, 23, 42, 0.7);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.finding-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.finding-summary p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  white-space: pre-line;
+}
+
+.finding-metadata {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.metadata-item strong {
+  color: var(--text-secondary);
+}
+
+/* Expanded Details Section */
+.finding-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.detail-section h4 {
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 0.6rem;
+}
+
+.cwe-list {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.cwe-link {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.cwe-link:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+  color: #ffffff;
+}
+
+.detail-section ul,
+.detail-section ol {
+  padding-left: 1.5rem;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.detail-section li {
+  margin-bottom: 0.4rem;
+}
+
+.detail-section a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}
+
+.detail-section a:hover {
+  text-decoration: underline;
+}

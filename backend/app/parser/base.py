@@ -4,6 +4,7 @@ Provides language-specific extraction of services, endpoints, calls, etc.
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Tuple
+from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,12 @@ class LanguageParser(ABC):
     
     language_name: str
     file_extensions: List[str]
+    
+    def supports(self, file_path: str) -> bool:
+        """Check if this parser supports the given file extension."""
+        ext = Path(file_path).suffix.lower()
+        ext_no_dot = ext.lstrip(".")
+        return ext in self.file_extensions or ext_no_dot in self.file_extensions
     
     @abstractmethod
     def parse_file(self, file_path: str, content: str) -> Dict[str, Any]:
