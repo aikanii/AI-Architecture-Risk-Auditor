@@ -1,0 +1,48 @@
+name: AI Architecture Risk Audit
+
+on:
+  push:
+    branches: [main, master, arena/*]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-audit:
+    name: Run Test Suite & Architecture Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Semgrep & Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install semgrep pytest
+
+      - name: Run Core & Acceptance Tests
+        run: |
+          cd backend
+          PYTHONPATH=. pytest tests/ -v
+
+      - name: Run Architecture Risk Audit Scan
+        run: |
+          cd backend
+          PYTHONPATH=. python -m app.cli scan ../test-fixtures/demo-repo \
+            --output /tmp/architecture-report.sarif \
+            --format sarif \
+            --fail-on CRITICAL || true
+
+      - name: Upload SARIF Report to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: /tmp/architecture-report.sarif
+          category: architecture-risk-auditor
