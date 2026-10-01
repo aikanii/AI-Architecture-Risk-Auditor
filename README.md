@@ -1,3 +1,4 @@
+<div align="center">
 # AI Architecture Risk Auditor
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
@@ -11,6 +12,7 @@
 
 > An enterprise-grade, static analysis platform that automatically reconstructs distributed microservice architectures into graph topologies, flags structural vulnerabilities, single points of failure (SPOFs), and unencrypted call chains, and generates actionable, AI-assisted remediation reports with zero runtime code execution.
 
+</div>
 ---
 
 ## Table of Contents
